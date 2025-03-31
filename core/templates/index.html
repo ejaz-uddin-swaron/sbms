@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head_title %}Shariah Banking System{% endblock %}
+
+{% block content %}
+<style>
+@keyframes slide-in-left {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.animate-slide-in-left {
+    animation: slide-in-left 0.8s ease-out;
+}
+</style>
+
+<div class="container opacity-90 max-w-3xl flex flex-col md:flex-row text-center items-center mb-52 lg:text-center">
+    <div class="flex flex-col w-full lg:w-1/2 justify-center items-start pt-16 pb-24 px-6 bg-gradient-to-b from-gray-900 to-gray-700 text-white rounded-2xl bg-opacity-70 mx-3 
+    animate-slide-in-left">
+        {% if x == 1 %}
+            <h1 class="font-bold text-2xl my-4 text-center">
+                “O believers! Fear Allah and give up outstanding interest if you are true believers.”
+                — Surah Al-Baqarah (2:278)  
+            </h1>
+        {% elif x == 2 %}
+            <h1 class="font-bold text-2xl my-4 text-center">
+                “If you do not, then be informed of a war from Allah and His Messenger. But if you repent, you may retain your capital—neither inflicting nor suffering harm.”
+                — Surah Al-Baqarah (2:279)
+            </h1>
+        {% elif x == 3 %}
+            <h1 class="font-bold text-2xl my-4 text-center">
+                “Allah destroys interest and gives increase for charities. And Allah does not like every sinning disbeliever.”
+                — Surah Al-Baqarah (2:276)
+            </h1>
+        {% elif x == 4 %}
+            <h1 class="font-bold text-2xl my-4 text-center">
+                “Whatever you give for interest to increase within the wealth of people will not increase with Allah. But what you give in charity, desiring the face of Allah—those are the multipliers.”
+                — Surah Ar-Rum (30:39)
+            </h1>
+        {% elif x == 5 %}
+            <h1 class="font-bold text-2xl my-4 text-center">
+                Jabir (RA) reported: “The Messenger of Allah (ﷺ) cursed the one who consumes interest, the one who pays it, the one who records it, and the two witnesses to it.”
+                — (Sahih Muslim 1598)
+            </h1>
+        {% elif x == 6 %}
+            <h1 class="font-bold text-2xl my-4 text-center">
+                Abdullah ibn Hanzalah (RA) reported: “The Messenger of Allah (ﷺ) said, ‘A single dirham of interest knowingly taken by a person is worse than committing adultery 36 times.’”
+                — (Musnad Ahmad 21957, Al-Bayhaqi 10566, Sahih by Al-Albani)
+            </h1>
+        {% elif x == 7 %}
+            <h1 class="font-bold text-2xl my-4 text-center">
+                Abdullah ibn Mas’ud (RA) reported: “The Messenger of Allah (ﷺ) said, ‘Riba has seventy-three levels, the least of which is like a man committing adultery with his own mother.’”
+                — (Sunan Ibn Majah 2274, Sahih by Al-Albani)
+            </h1>
+        {% endif %}
+
+        {% if not user.is_authenticated %}
+        <div class="flex justify-end w-full">
+            <a href="{% url 'register' %}" class="mx-2 inline-block font-medium text-sm px-4 py-2 leading-none bg-yellow-600 rounded text-white border-white hover:border-transparent hover:text-dark hover:bg-orange-500 mt-4 lg:mt-0">Register</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

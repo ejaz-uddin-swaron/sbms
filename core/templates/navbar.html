@@ -1,0 +1,114 @@
+{% load static %}
+<nav class="flex items-center justify-between flex-wrap bg-black p-3 px-10">
+    <div class="flex items-center flex-shrink-0 text-white mr-6">
+        <a href="{% url 'home' %}">
+            <img class="w-16 h-16" src="{% static 'logo.png' %}" alt="">
+        </a>
+    </div>
+    <div class="block lg:hidden">
+        <button class="flex items-center px-3 py-2 border rounded text-white border-white-400 hover:text-white hover:border-white">
+            <svg class="fill-current h-3 w-3" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><title>Menu</title><path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v-2z"/></svg>
+        </button>
+    </div>
+
+    <div class="w-full block flex-grow lg:flex lg:items-center lg:w-auto px-10">
+        {% if request.user.is_authenticated %}
+            <div class="text-md lg:flex-grow">
+                <a href="{% url 'transaction_report' %}" class="block mt-4 px-2.5 lg:inline-block lg:mt-0 text-white hover:text-yellow-500 hover:font-black mr-4">
+                    Report
+                </a>
+                <a href="{% url 'deposit_money' %}" class="block mt-4 px-2.5 lg:inline-block lg:mt-0 text-white hover:text-yellow-500 hover:font-black mr-4">
+                    Deposit
+                </a>
+                <a href="{% url 'withdraw_money' %}" class="block mt-4 px-2.5 lg:inline-block lg:mt-0 text-white hover:text-yellow-500 hover:font-black mr-4">
+                    Withdraw
+                </a>
+                <a href="{% url 'loan_request' %}" class="block mt-4 px-2.5 lg:inline-block lg:mt-0 text-white hover:text-yellow-500 hover:font-black mr-4">
+                    Loan Request
+                </a>
+            </div>
+            <div class="flex w-auto">
+                <div class="text-white my-auto font-black px-5 text-lg">
+                    {{ request.user.first_name }} {{ request.user.last_name }} 
+                </div>
+            </div>
+                
+                <button class="hover:bg-orange-500 text-white pr-4 border-white border pl-3 rounded-lg" id="balanceButton" onclick="toggleBalance()"><i class="fa-solid fa-sack-dollar"></i> Tap for Balance</button>
+                <span class="text-white pt-1 pr-4 border-white border pl-3 rounded-lg" id="balanceText" style="display: none;"><i class="fa-solid fa-dollar-sign"></i> {{ request.user.account.balance }}</span>
+                
+                <script>
+                    function toggleBalance() {
+                        var balanceText = document.getElementById("balanceText");
+                        var balanceButton = document.getElementById("balanceButton");
+                        
+                        if (balanceText.style.display === "none") {
+                            balanceText.style.display = "inline";
+                            balanceButton.style.display = "none"; // Hide the button after clicking
+                        }
+                    }
+                </script>
+
+                <div class="ml-1">
+                    <a href="{% url 'profile' %}" class="font-bold mx-1 inline-block text-sm px-4 py-2 leading-none bg-transparent rounded text-white border-white hover:border-transparent hover:text-dark hover:bg-orange-500 mt-4 lg:mt-0">Profile</a>
+                </div>
+
+                <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="mx-2 inline-block font-bold text-sm px-4 py-2 leading-none bg-transparent rounded text-white border-white hover:border-transparent hover:text-dark hover:bg-orange-500 mt-4 lg:mt-0">Logout</button>
+                </form>                
+                
+                <div class="relative ml-1 flex justify-end">
+                    <button id="menuButton" class="px-4 py-1 bg-transparent hover:bg-orange-500 text-white rounded-md">
+                        <i class="fa-solid fa-bars" style="pointer-events: none;""></i>
+                    </button>
+                
+                    <div id="menuList" class="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg hidden translate-x-[-20px] z-50">
+                        <ul class="py-2 text-gray-700">
+                            <li class="px-4 py-2 hover:bg-yellow-500 cursor-pointer">
+                                <a href="{% url 'donation' %}" class="block w-full h-full">Donation</a>
+                            </li>
+                            <li class="px-4 py-2 hover:bg-yellow-500 cursor-pointer">
+                                <a href="" class="block w-full h-full">Loan Request</a>
+                            </li>
+                            <li class="px-4 py-2 hover:bg-yellow-500 cursor-pointer">
+                                <a href="" class="block w-full h-full">Ask Your Questions</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <script>
+                    document.getElementById("menuButton").addEventListener("click", function() {
+                        var menu = document.getElementById("menuList");
+                        menu.classList.toggle("hidden");
+                        document.body.style.overflowX = menu.classList.contains("hidden") ? "auto" : "hidden";
+                    });
+                
+                    document.addEventListener("click", function(event) {
+                        var menu = document.getElementById("menuList");
+                        var button = document.getElementById("menuButton");
+                
+                        if (!menu.contains(event.target) && event.target !== button) {
+                            menu.classList.add("hidden");
+                            document.body.style.overflowX = "auto";
+                        }
+                    });
+                </script>
+                
+            
+        {% else %}
+
+            <div class="lg:flex-grow"></div>
+            <button class="p-3 rounded pointer-events-none" disabled>
+                <h1 class="text-6xl font-bold text-white pr-24">WELCOME TO THE BANK</h1>
+            </button>
+            <div>
+                <a href="{% url 'login' %}" class="mr-2 inline-block font-medium text-sm px-4 py-2 leading-none bg-yellow-600 rounded text-white border-white hover:border-transparent hover:text-dark hover:bg-orange-500 mt-4 lg:mt-0">Login <i class="fa-solid fa-right-to-bracket"></i></a>
+            </div>
+            <div>
+                <a href="{% url 'register' %}" class="inline-block font-medium text-sm px-4 py-2 leading-none bg-yellow-600 rounded text-white border-white hover:border-transparent hover:text-dark hover:bg-orange-500 mt-4 lg:mt-0">Register</a>
+            </div>
+
+        {% endif %}
+    </div>
+</nav>

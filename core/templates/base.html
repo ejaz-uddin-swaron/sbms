@@ -1,0 +1,129 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <meta name="description" content="Dummy Banking System" />
+        <title>
+            {% block head_title %}Shariah Banking Management System{% endblock %}
+        </title>
+        <script src="https://kit.fontawesome.com/ad89e7ef40.js" crossorigin="anonymous"></script>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet">
+       
+        {% block head_extra %}{% endblock %}
+
+        <style>
+            footer {
+                position: fixed;
+                bottom: 0;
+                width: 100%;
+            }
+
+            .content-wrapper {
+                min-height: 100vh;
+                padding-bottom: 3rem; 
+                position: relative; 
+            }
+
+            /* Apply blur effect on the background image */
+            .content-wrapper::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-image: url('{% static "img/ShariahBank.jpg" %}');
+                background-size: cover; /* Ensures the image covers the screen */
+                background-position: center top;
+                background-repeat: no-repeat;
+                z-index: -1;
+                object-fit: contain;
+            }
+
+
+            /* Optional: To darken the background for better readability */
+            .content-wrapper::after {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.4); /* Semi-transparent dark overlay */
+                z-index: -1; /* Place it behind the content */
+            }
+        </style>
+    </head>
+    
+    <body class="min-h-screen flex flex-col">
+        
+        <div class="fixed top-0 left-0 w-full z-50">
+            {% include 'navbar.html' %}
+        </div>
+
+        <div class="content-wrapper flex-grow relative">
+            <!-- Main Content -->
+            <div class="text-center text-yellow-500 pt-52">
+                
+            {% if not user.is_authenticated %}
+                <div id="popup" class="popup">
+                    <button class="flex items-center px-3 py-2 rounded text-white hover:text-white">
+                        Let's Get Started!
+                    </button>
+                    <span class="close-btn" onclick="closePopup()">&times;</span>
+                </div>
+                
+                <script>
+                    function showPopup() {
+                        document.getElementById("popup").style.display = "block";
+                    }
+                    function closePopup() {
+                        document.getElementById("popup").style.display = "none";
+                    }
+                    
+                    // Show popup after 2 seconds
+                    setTimeout(showPopup, 2000);
+                </script>
+
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                    }
+
+                    .popup {
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        background-color: #d3c52f;
+                        color: white;
+                        padding: 15px;
+                        border-radius: 8px;
+                        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                        display: none;
+                        z-index: 1050;
+                    }
+                    .close-btn {
+                        margin-left: 10px;
+                        cursor: pointer;
+                        font-weight: bold;
+                    }
+                </style>
+
+            {% endif %}
+
+            </div>
+            
+            <div class="relative z-10 lg:container text-center lg:mx-auto" id="main">
+                {% include 'messages.html' %}
+                {% block content %}
+                {% endblock %}
+            </div>
+        </div>
+
+        {% include 'footer.html' %}
+
+    </body>
+</html>
