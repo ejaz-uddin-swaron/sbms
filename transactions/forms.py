@@ -1,5 +1,6 @@
 from django import forms
 from .models import Transaction
+from accounts.models import UserBankAccount
 
 class TransactionForm(forms.ModelForm):
     class Meta:
@@ -19,7 +20,7 @@ class TransactionForm(forms.ModelForm):
 
 class DepositForm(TransactionForm):
     def clean_amount(self):
-        min_deposit_amount = 100
+        min_deposit_amount = 10
         amount = self.cleaned_data.get('amount')
         if amount < min_deposit_amount:
             raise forms.ValidationError(
@@ -64,3 +65,40 @@ class LoanRequestForm(TransactionForm):
             )
 
         return amount
+    
+class SendMoneyForm(TransactionForm):
+    recipient_account_number = forms.CharField(max_length=20)
+
+    def clean_amount(self):
+        account = self.account
+        amount = self.cleaned_data.get('amount')
+
+        if amount < 1:
+            raise forms.ValidationError(
+                f'NOOB, you cannot transfer negative balance'
+            )
+        
+        if amount > account.balance:
+            raise forms.ValidationError(
+                f'NOOB, you cannot send more balance than your current balance'
+            )
+        
+        return amount
+    
+    def clean_recipient_account_number(self):
+        recipient_account_number = self.cleaned_data.get('recipient_account_number')
+        recipient_account = UserBankAccount.objects.filter(account_no=recipient_account_number).first()
+
+        if not recipient_account:
+            raise forms.ValidationError("Recipient account number is invalid.")
+        
+        return recipient_account_number
+    
+    def save(self, commit=True):
+        transaction = super().save(commit=False)
+        transaction.balance_after_transaction = self.account.balance
+
+        if commit:
+            transaction.save()
+
+        return transaction

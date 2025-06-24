@@ -1,51 +1,132 @@
-{% extends 'base.html' %}  
+{% extends 'base.html' %}
+{% load static %}
 
-{% block content %} 
+{% block content %}
+<!-- Background image container (fixed position) -->
+<div style="
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('{% static "img/ShariahBank.jpg" %}');
+  background-size: cover;
+  background-position: center top;
+  z-index: -2;
+"></div>
 
-{% if form.non_field_errors %} 
-{% for error in form.non_field_errors %}
-    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-2" role="alert">
+<!-- Dark overlay (fixed position) -->
+<div style="
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: -1;
+"></div>
+
+<!-- Main content container -->
+<div style="
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  padding-bottom: 3rem;
+">
+  {% if form.non_field_errors %}
+    {% for error in form.non_field_errors %}
+      <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-2" role="alert">
         <p class="font-bold">Error!</p>
         <p class="block sm:inline">{{ error }}</p>
-    </div>
-{% endfor %} 
-{% endif %}
-<div class="grid grid-cols-3 gap-4">
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="grid grid-cols-3 gap-4">
     <div></div>
-    <div class="py-2 px-3 rounded-xl bg-white mt-12">
-        <h1 class="font-bold text-3xl text-center pb-5 shadow-md">Login</h1>
-        <div class="w-full mt-10">
-            <form method="post" class="shadow-md border border-gray-200 rounded px-8 pt-6 pb-8 mb-4">
-                {% csrf_token %} 
+    <div class="py-2 px-3 rounded-xl mt-12" style="background-color: rgba(255, 255, 255, 0.8);">
+      <h1 class="font-bold text-3xl text-center pb-5 shadow-md">Login</h1>
+      <div class="w-full mt-10">
+        <form method="post" class="shadow-md border border-white rounded px-8 pt-6 pb-8 mb-4">
+          {% csrf_token %}
+          
+          {% for hidden_field in form.hidden_fields %}
+            {{ hidden_field.errors }}
+            {{ hidden_field }}
+          {% endfor %}
+
+          {% for field in form.visible_fields %}
+            <div class="mb-4">
+              <label class="block text-black text-sm font-bold mb-2" for="{{ field.id_for_label }}">
+                {{ field.label }}
+              </label>
+
+              {% if field.field.widget.input_type == "password" %}
+              
+              <div class="relative">
+                <input class="shadow appearance-none border bg-white border-black rounded w-full py-2 px-3 text-black leading-tight focus:outline-none focus:shadow-outline pr-10" 
+                       name="{{ field.name }}" 
+                       id="{{ field.id_for_label }}" 
+                       type="password">
+              
+                <i class="fa-solid fa-eye-slash absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer"
+                   onclick="togglePassword('{{ field.id_for_label }}', this)">
+                </i>
+              </div>
+              
+              <script>
+              function togglePassword(fieldId, icon) {
+                const input = document.getElementById(fieldId);
                 
-                {% for hidden_field in form.hidden_fields %} 
-                    {{ hidden_field.errors }} {{ hidden_field }}
-                {% endfor %} 
+                if (input.type === "password") {
+                  input.type = "text";
+                  icon.classList.remove('fa-eye-slash');
+                  icon.classList.add('fa-eye');
+                } else {
+                  input.type = "password";
+                  icon.classList.remove('fa-eye');
+                  icon.classList.add('fa-eye-slash');
+                }
+              }
+              </script>
+              
+              
+            {% else %}
 
-                {% for field in form.visible_fields %}
-                    
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="{{ field.id_for_label }}">
-                            {{ field.label }}
-                        </label>
-                        <input class="shadow appearance-none border border-gray-500 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="{{ field.name }}" id="{{ field.id_for_label }}" type="{{ field.widget_type }}">
-                    </div>
+            <input class="shadow appearance-none bg-white border border-black rounded w-full py-2 px-3 text-black leading-tight focus:outline-none focus:shadow-outline" 
+                     name="{{ field.name }}" 
+                     id="{{ field.id_for_label }}" 
+                     type="{{ field.widget_type }}">
+                     
+            {% endif %}
+            </div>
 
-                    {% if field.errors %} 
-                        {% for error in field.errors %}
-                        <p class="text-red-600 text-sm italic pb-2">{{ error }}</p>
-                        {% endfor %} 
-                    {% endif %} 
+            {% if field.errors %}
+              {% for error in field.errors %}
+                <p class="text-red-600 text-sm italic pb-2">{{ error }}</p>
+              {% endfor %}
+            {% endif %}
+          {% endfor %}
 
-                {% endfor %}
-
-                <div class="flex items-center justify-center w-full">
-                    <button class="bg-blue-900 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
-                Log in
+          <div class="flex items-center justify-center w-full">
+            <button class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
+              Login <i class="fa-solid fa-right-to-bracket"></i>
             </button>
-                </div>
-            </form>
-        </div>
+          </div>
+        </form>
+      </div>
     </div>
+  </div>
 </div>
+
+<!-- Footer -->
+<footer style="
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  z-index: 2;
+  background-color: rgba(0,0,0,0.7);
+">
+  <!-- Your footer content here -->
+</footer>
 {% endblock %}

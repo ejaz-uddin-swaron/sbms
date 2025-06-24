@@ -1,7 +1,8 @@
 from django.views.generic import CreateView, ListView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from accounts.models import UserBankAccount
 from .models import Transaction
-from .forms import DepositForm, WithdrawForm, LoanRequestForm
+from .forms import DepositForm, WithdrawForm, LoanRequestForm, SendMoneyForm
 from .constants import DEPOSIT, WITHDRAWAL, LOAN, LOAN_PAID
 from django.contrib import messages
 from django.http import HttpResponse
@@ -12,6 +13,7 @@ from django.db.models import Sum
 from django.urls import reverse_lazy
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
+from decimal import Decimal
 
 # Create your views here.
 
@@ -25,6 +27,16 @@ def send_transaction_email(user, amount, subject, template):
         send_email.attach_alternative(message, 'text/html')
         send_email.send()
 
+def send_zakat_email(user, amount, zakat_amount, subject, template):
+        message = render_to_string(template,{
+            'user' : user,
+            'amount' : amount,
+            'zakat_amount' : zakat_amount
+        })
+
+        send_email = EmailMultiAlternatives(subject,'',to=[user.email])
+        send_email.attach_alternative(message, 'text/html')
+        send_email.send()
 
 class TransactionCreateMixin(LoginRequiredMixin, CreateView):
     template_name = 'transactions/transaction_form.html'
@@ -66,6 +78,12 @@ class DepositMoneyView(TransactionCreateMixin):
     
         messages.success(self.request,f'{"{:,.2f}".format(float(amount))}$ has been deposited to your account successfully')
         send_transaction_email(self.request.user, amount, 'Deposit Email', 'transactions/deposit_email.html')
+
+        current_nisab = 588
+
+        if amount >= current_nisab and account.religion == 'Islam':
+            zakat_amount = amount * Decimal(0.025 )
+            send_zakat_email(self.request.user, amount, zakat_amount, 'Zakat email', 'transactions/zakat_email.html')
 
         return super().form_valid(form)
     
@@ -172,3 +190,37 @@ class LoanListView(LoginRequiredMixin, ListView):
         queryset = Transaction.objects.filter(account = user_account, transaction_type = LOAN)
 
         return queryset
+    
+class SendMoneyView(TransactionCreateMixin):
+    form_class = SendMoneyForm
+    template_name = 'transactions/transaction_form.html'
+    title = 'Send Money'
+    success_url = reverse_lazy('transaction_report') 
+
+    def get_initial(self):
+        initial = {'transaction_type': 5} 
+        return initial
+
+    def form_valid(self, form):
+        amount = form.cleaned_data['amount']
+        recipient_account_number = form.cleaned_data['recipient_account_number']
+        recipient_account = UserBankAccount.objects.get(account_no=recipient_account_number)  # now safe
+
+        sender_account = self.request.user.account
+        sender_account.balance -= amount
+        sender_account.save(update_fields=['balance'])
+
+        recipient_account.balance += amount
+        recipient_account.save(update_fields=['balance'])
+
+        transaction = form.save(commit=False)
+        transaction.balance_after_transaction = sender_account.balance
+        transaction.save()
+
+        messages.success(self.request, f'Successfully sent {"{:,.2f}".format(float(amount))}$ to recipient.')
+        send_transaction_email(self.request.user, amount, 'Send Money Email', 'transactions/send_money_email.html')
+        send_transaction_email(recipient_account.user, amount, 'Money Received Email', 'transactions/receive_money_email.html')
+
+        return super().form_valid(form)
+
+

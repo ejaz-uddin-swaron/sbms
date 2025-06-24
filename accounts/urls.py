@@ -7,3 +7,4 @@ urlpatterns = [
     path('logout/', UserLogoutView.as_view(), name='logout'),
     path('profile/', UserBankAccountUpdateView.as_view(), name='profile' )
 ]
+

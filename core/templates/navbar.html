@@ -1,5 +1,5 @@
 {% load static %}
-<nav class="flex items-center justify-between flex-wrap bg-black p-3 px-10">
+<nav class="flex items-center justify-between flex-wrap bg-black/60 p-3 px-10">
     <div class="flex items-center flex-shrink-0 text-white mr-6">
         <a href="{% url 'home' %}">
             <img class="w-16 h-16" src="{% static 'logo.png' %}" alt="">
@@ -23,8 +23,8 @@
                 <a href="{% url 'withdraw_money' %}" class="block mt-4 px-2.5 lg:inline-block lg:mt-0 text-white hover:text-yellow-500 hover:font-black mr-4">
                     Withdraw
                 </a>
-                <a href="{% url 'loan_request' %}" class="block mt-4 px-2.5 lg:inline-block lg:mt-0 text-white hover:text-yellow-500 hover:font-black mr-4">
-                    Loan Request
+                <a href="{% url 'send_money' %}" class="block mt-4 lg:inline-block lg:mt-0 text-white hover:text-yellow-500 hover:font-black mr-4">
+                    Send Money
                 </a>
             </div>
             <div class="flex w-auto">
@@ -57,25 +57,30 @@
                     <button type="submit" class="mx-2 inline-block font-bold text-sm px-4 py-2 leading-none bg-transparent rounded text-white border-white hover:border-transparent hover:text-dark hover:bg-orange-500 mt-4 lg:mt-0">Logout</button>
                 </form>                
                 
-                <div class="relative ml-1 flex justify-end">
-                    <button id="menuButton" class="px-4 py-1 bg-transparent hover:bg-orange-500 text-white rounded-md">
-                        <i class="fa-solid fa-bars" style="pointer-events: none;""></i>
+                <div class="relative inline-block">
+                    <button id="dropdownButton" class="px-4 py-1 hover:bg-orange-500 text-white rounded-md focus:outline-none">
+                        <i class="fa-solid fa-bars"></i>
                     </button>
-                
-                    <div id="menuList" class="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg hidden translate-x-[-20px] z-50">
-                        <ul class="py-2 text-gray-700">
-                            <li class="px-4 py-2 hover:bg-yellow-500 cursor-pointer">
-                                <a href="{% url 'donation' %}" class="block w-full h-full">Donation</a>
-                            </li>
-                            <li class="px-4 py-2 hover:bg-yellow-500 cursor-pointer">
-                                <a href="" class="block w-full h-full">Loan Request</a>
-                            </li>
-                            <li class="px-4 py-2 hover:bg-yellow-500 cursor-pointer">
-                                <a href="" class="block w-full h-full">Ask Your Questions</a>
-                            </li>
-                        </ul>
-                    </div>
+                    <ul id="dropdownMenu" class="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg hidden">
+                        <li><a href="{% url 'donation' %}" class="rounded-lg block px-4 py-2 hover:bg-yellow-500">Donation</a></li>
+                        <li><a href="{% url 'loan_request' %}" class="rounded-lg block px-4 py-2 hover:bg-yellow-500">Loan Request</a></li>
+                        <li><a href="{% url 'QnA' %}" class="rounded-lg block px-4 py-2 hover:bg-yellow-500">Ask Your Questions</a></li>
+                    </ul>
                 </div>
+                
+                <script>
+                    document.addEventListener('click', function (event) {
+                        const dropdownButton = document.getElementById('dropdownButton');
+                        const dropdownMenu = document.getElementById('dropdownMenu');
+                
+                        if (dropdownButton.contains(event.target)) {
+                            dropdownMenu.classList.toggle('hidden');
+                        } else {
+                            dropdownMenu.classList.add('hidden');
+                        }
+                    });
+                </script>
+                
                 
                 <script>
                     document.getElementById("menuButton").addEventListener("click", function() {
@@ -100,7 +105,7 @@
 
             <div class="lg:flex-grow"></div>
             <button class="p-3 rounded pointer-events-none" disabled>
-                <h1 class="text-6xl font-bold text-white pr-24">WELCOME TO THE BANK</h1>
+                <h1 class="text-6xl font-bold text-white pr-24 mr-12">WELCOME TO THE BANK</h1>
             </button>
             <div>
                 <a href="{% url 'login' %}" class="mr-2 inline-block font-medium text-sm px-4 py-2 leading-none bg-yellow-600 rounded text-white border-white hover:border-transparent hover:text-dark hover:bg-orange-500 mt-4 lg:mt-0">Login <i class="fa-solid fa-right-to-bracket"></i></a>

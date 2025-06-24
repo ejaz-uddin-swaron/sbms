@@ -7,3 +7,11 @@ GENDER = (
     ('Male', 'Male'),
     ('Female', 'Female'),  
 )
+
+RELIGION = (
+    ('Islam', 'Islam'),
+    ('Christianity', 'Christianity'),
+    ('Hinduism', 'Hinduism'),
+    ('Buddhism', 'Buddhism'),
+    ('Others', 'Others') ,
+)

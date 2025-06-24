@@ -1,41 +1,180 @@
-{% extends 'base.html' %} 
+{% extends 'base.html' %}
+{% load static %}
 
-{% block head_title %}{{ title }}{% endblock %} 
+{% block head_title %}{{ title }}{% endblock %}
 
 {% block content %}
+<!-- Background image container (fixed position) -->
+{% if title == 'Request For Loan' %}
 
-<div class="w-full flex mt-5 justify-center ">
-    <div class="bg-white w-5/12 rounded-lg">
-        
-        {% if title == 'Request For Loan' %}
-            <div><a class="font-bold text-blue text-center pb-5 pt-10 px-5" href="{% url 'loan_list' %}">View All Loan List</a></div>
-        {% endif %}
-        
-        <h1 class="font-bold text-3xl text-center pb-5 pt-10 px-5">{{ title }}</h1>
-        
-        <form method="post" class="px-8 pt-6 pb-8 mb-4">
-            {% csrf_token %}
+<div style="
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('{% static 'halal_meeting.png' %}');
+  background-size: cover;
+  background-position: center;
+  z-index: -2;
+"></div>
 
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="amount">
-                    Amount
+{% elif title == 'Deposit Money' %}
+
+<div style="
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('{% static 'inside2.webp' %}');
+  background-size: cover;
+  background-position: center;
+  z-index: -2;
+"></div>
+
+{% elif title == 'Withdraw Money' %}
+
+<div style="
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('{% static 'inside3.webp' %}');
+  background-size: cover;
+  background-position: center;
+  z-index: -2;
+"></div>
+
+{% else %}
+
+<div style="
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('{% static 'inside.png' %}');
+  background-size: cover;
+  background-position: center;
+  z-index: -2;
+"></div>
+
+{% endif %}
+
+<!-- Dark overlay (fixed position) -->
+<div style="
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: -1;
+"></div>
+
+<!-- Main content container -->
+<div style="
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  padding-bottom: 3rem;
+">
+  <div class="w-full flex mt-5 justify-center opacity-75">
+    <div style="
+      background: linear-gradient(to bottom, #1e293b, #0f172a);
+      width: 42%;
+      border-radius: 0.5rem;
+      opacity: 0.95;
+    ">
+      {% if title == 'Request For Loan' %}
+        <div class="p-3 hover:bg-gradient-to-b from-slate-900 to-slate-800">
+          <a class="font-bold text-white text-center pb-5 pt-10 px-5" href="{% url 'loan_list' %}">View All Loan List</a>
+        </div>
+      {% endif %}
+      
+      <h1 class="font-bold text-3xl text-center text-white pb-5 pt-5 px-5">{{ title }}</h1>
+      
+      <form method="post" class="px-8 pt-6 pb-8 mb-4">
+        {% csrf_token %}
+
+        <div class="mb-4">
+          <label class="block text-white text-lg font-bold mb-2" for="amount_display">
+            Amount
+          </label>
+        
+          <div class="relative">
+            <!-- Displayed "fake" input -->
+            <div id="amount_display" contenteditable="true"
+                 class="shadow appearance-none border-rounded w-full py-2 px-3 text-gray-700 leading-tight border rounded-md border-gray-500 focus:outline-none focus:shadow-outline bg-white min-h-[38px]"
+                 style="white-space: nowrap; overflow-x: auto;">
+            </div>
+        
+            <!-- Hidden real input -->
+            <input type="hidden" name="amount" id="amount_real" required>
+          </div>
+        </div>
+
+        {% if title == 'Send Money' %}
+            <div class="mb-4 text-white">
+                <label class="block text-sm font-bold mb-2" for="recipient_account_number">
+                    Account No.
                 </label>
-                <input class="shadow appearance-none border-rounded w-full py-2 px-3 text-gray-700 leading-tight border rounded-md border-gray-500 focus:outline-none focus:shadow-outline" name="amount" id="amount" type="number" required placeholder="Amount">
+                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight border-gray-500 focus:outline-none focus:shadow-outline" name="recipient_account_number" id="recipient_account_number" type="number" required placeholder="Enter Account No.">
             </div>
+        {% endif %}
 
-            {% if form.amount.errors %} 
-                {% for error in form.amount.errors %}
-                    <p class="text-red-600 text-sm italic pb-2">{{ error }}</p>
-                {% endfor %} 
-            {% endif %}
+        {% if form.amount.errors %} 
+          {% for error in form.amount.errors %}
+            <p class="text-red-600 text-sm italic pb-2">{{ error }}</p>
+          {% endfor %} 
+        {% endif %}
 
-            <div class="flex w-full justify-center">
-                <button class="bg-blue-900 text-white hover:text-blue-900 hover:bg-white border border-blue-900 font-bold px-4 py-2 rounded-lg" type="submit">
-                    Submit
-                </button>
-            </div>
-        </form>
+        <div class="flex w-full justify-center">
+          <button class="bg-white opacity-100 text-black hover:text-black hover:bg-yellow-500 border border-blue-900 font-bold text-1xl px-4 py-2 rounded-lg" type="submit">
+            Submit
+          </button>
+        </div>
+      </form>
     </div>
-    
+  </div>
 </div>
+
+<script>
+  const amountDisplay = document.getElementById('amount_display');
+  const amountReal = document.getElementById('amount_real');
+
+  amountDisplay.addEventListener('input', () => {
+    // Remove any existing dollar signs, non-digits
+    let raw = amountDisplay.innerText.replace(/[^0-9]/g, '');
+
+    // Update the display with $ after the number
+    amountDisplay.innerText = raw + (raw.length ? '$' : '');
+
+    // Move cursor to the end
+    const range = document.createRange();
+    const sel = window.getSelection();
+    range.selectNodeContents(amountDisplay);
+    range.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(range);
+
+    // Update the real input
+    amountReal.value = raw;
+  });
+</script>
+
+
+<!-- Footer -->
+<footer style="
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  z-index: 2;
+  background-color: rgba(0,0,0,0.7);
+">
+  <!-- Your footer content here -->
+</footer>
+
 {% endblock %}

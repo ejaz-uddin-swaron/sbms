@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head_title %}
+    Shariah Banking FAQ
+{% endblock %}
+
+{% block extra_css %}
+  <style>
+    .sora-font {
+      font-family: "Sora", sans-serif;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <!-- FAQ Section -->
+  <section class="mx-6 my-4 px-6 bg-slate-50 rounded-3xl shadow-lg sora-font">
+    <h3 class="text-4xl font-bold text-center my-12 text-slate-800">Frequently Asked Questions</h3>
+
+    <div class="hero">
+      <div class="hero-content flex-col lg:flex-row items-start gap-10">
+
+        <!-- Image -->
+        <img
+          src="{% static 'FAQ.jpg' %}"
+          alt="FAQ Illustration"
+          class="w-full lg:w-1/2 rounded-lg shadow-lg"
+        />
+
+        <!-- FAQ Accordion -->
+        <div class="space-y-5 w-full lg:w-1/2">
+
+          <div class="collapse collapse-arrow border border-slate-300">
+            <input type="checkbox" />
+            <div class="collapse-title text-xl font-medium">
+              Q: Can we keep money in a conventional bank just for safety without using the interest?
+            </div>
+            <div class="collapse-content text-slate-700">
+              <p>
+                Yes, keeping money in a conventional bank purely for safekeeping is allowed in necessity, provided the interest earned is neither used nor kept, but given away to charity without the intention of reward.<br><br>
+                <strong>Reference:</strong> Mufti Taqi Usmani, <em>Contemporary Fatawa</em><br>
+                “If one is compelled to deposit money in an interest-based bank for security, the interest must be given away to the poor without seeking reward.”
+              </p>
+            </div>
+          </div>
+
+          <div class="collapse collapse-arrow border border-slate-300">
+            <input type="checkbox" />
+            <div class="collapse-title text-xl font-medium">
+              Q: What should a Muslim do with interest money accidentally received?
+            </div>
+            <div class="collapse-content text-slate-700">
+              <p>
+                Interest money should be disposed of by giving it to the poor or for public welfare, without the intention of earning reward, as it's not pure income.<br><br>
+                <strong>Reference:</strong> <em>Fatawa-e-Rahimiyyah, Vol. 3</em><br>
+                "Such wealth should be discarded by giving it to the needy or in public welfare, without intention of sadaqah."
+              </p>
+            </div>
+          </div>
+
+          <div class="collapse collapse-arrow border border-slate-300">
+            <input type="checkbox" />
+            <div class="collapse-title text-xl font-medium">
+              Q: If a Muslim’s salary is deposited in an interest-bearing account by default, what should they do?
+            </div>
+            <div class="collapse-content text-slate-700">
+              <p>
+                The individual should transfer the salary to a Shariah-compliant account if available, and ensure any interest accumulated is removed and donated without expecting reward.<br><br>
+                <strong>Reference:</strong> <em>Majma’ al-Fiqh al-Islami (OIC), Resolution 1999</em><br>
+                "One must separate clean earnings from unlawful additions and remove the latter."
+              </p>
+            </div>
+          </div>
+
+          <div class="collapse collapse-arrow border border-slate-300">
+            <input type="checkbox" />
+            <div class="collapse-title text-xl font-medium">
+              Q: Is using interest money to pay government taxes or utility bills allowed?
+            </div>
+            <div class="collapse-content text-slate-700">
+              <p>
+                No, using interest money to pay personal or obligatory dues like taxes or bills is not permissible. It should be given to the poor or for non-personal public use.<br><br>
+                <strong>Reference:</strong> <em>Fiqh al-Mu'amalat by Mufti Muhammad Shafi</em><br>
+                "It is not permissible to use Riba-based income for personal obligations."
+              </p>
+            </div>
+          </div>
+
+          <div class="collapse collapse-arrow border border-slate-300">
+            <input type="checkbox" />
+            <div class="collapse-title text-xl font-medium">
+              Q: Can a Shariah-compliant bank partner with a conventional bank for infrastructure (e.g., ATMs)?
+            </div>
+            <div class="collapse-content text-slate-700">
+              <p>
+                Yes, as long as the partnership is limited to permissible services (e.g., cash withdrawal) and does not involve sharing in interest-based transactions.<br><br>
+                <strong>Reference:</strong> <em>AAOIFI Standard No. 6 (Shirkah)</em><br>
+                “Permissible cooperation is allowed in areas where the core activity remains halal.”
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+  </section>
+{% endblock %}
+</html>

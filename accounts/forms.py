@@ -1,8 +1,8 @@
 from django.contrib.auth.forms import UserCreationForm
-from .constants import GENDER, ACCOUNT_TYPE
+from .constants import GENDER, ACCOUNT_TYPE, RELIGION
 from django import forms
 from django.contrib.auth.models import User
-from .models import UserBankAccount, UserAddress
+from django.db import connection
 
 class UserRegistrationForm(UserCreationForm):
     birth_date = forms.DateField(widget=forms.DateInput(attrs={'type':'date'}))
@@ -12,15 +12,16 @@ class UserRegistrationForm(UserCreationForm):
     city = forms.CharField(max_length=100)
     postal_code = forms.IntegerField()
     country = forms.CharField(max_length=100)
+    religion = forms.ChoiceField(choices=RELIGION)
 
     class Meta:
         model = User
-        fields = ['username', 'password1', 'password2', 'first_name', 'last_name', 'email', 'account_type', 'birth_date', 'gender', 'postal_code', 'city', 'country', 'street_address']
+        fields = ['username', 'password1', 'password2', 'first_name', 'last_name', 'email', 'account_type', 'birth_date', 'gender', 'postal_code', 'city', 'country', 'street_address', 'religion']
 
     def save(self, commit=True):
         our_user = super().save(commit=False)
 
-        if commit == True:
+        if commit:
             our_user.save()
             account_type = self.cleaned_data.get('account_type')
             gender = self.cleaned_data.get('gender')
@@ -29,25 +30,22 @@ class UserRegistrationForm(UserCreationForm):
             birth_date = self.cleaned_data.get('birth_date')
             city = self.cleaned_data.get('city')
             street_address = self.cleaned_data.get('street_address')
-            
-        UserAddress.objects.create(
-            user = our_user,
-            postal_code = postal_code,
-            country = country,
-            city = city,
-            street_address = street_address
-        )
+            religion = self.cleaned_data.get('religion')
 
-        UserBankAccount.objects.create(
-            user = our_user,
-            account_type = account_type,
-            gender = gender,
-            birth_date = birth_date,
-            account_no = 100000 + our_user.id
-        )
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    INSERT INTO accounts_useraddress (user_id, street_address, city, postal_code, country)
+                    VALUES (%s, %s, %s, %s, %s)
+                """, [our_user.id, street_address, city, postal_code, country])
+
+                cursor.execute("""
+                    INSERT INTO accounts_userbankaccount 
+                    (user_id, account_type, account_no, birth_date, gender, balance, religion, initial_deposit_date)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, CURRENT_DATE)
+                """, [our_user.id, account_type, 100000 + our_user.id, birth_date, gender, 0, religion])
 
         return our_user
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -61,6 +59,7 @@ class UserRegistrationForm(UserCreationForm):
                 )
             })
 
+
 class UserUpdateForm(forms.ModelForm):
     birth_date = forms.DateField(widget=forms.DateInput(attrs={'type':'date'}))
     gender = forms.ChoiceField(choices=GENDER)
@@ -69,6 +68,7 @@ class UserUpdateForm(forms.ModelForm):
     city = forms.CharField(max_length= 100)
     postal_code = forms.IntegerField()
     country = forms.CharField(max_length=100)
+    religion = forms.ChoiceField(choices=RELIGION)
 
     class Meta:
         model = User
@@ -86,40 +86,49 @@ class UserUpdateForm(forms.ModelForm):
                 )
             })
 
-        if self.instance:
-            try:
-                user_account = self.instance.account
-                user_address = self.instance.address
-            except UserBankAccount.DoesNotExist:
-                user_account = None
-                user_address = None
-
-            if user_account:
-                self.fields['account_type'].initial = user_account.account_type
-                self.fields['gender'].initial = user_account.gender
-                self.fields['birth_date'].initial = user_account.birth_date
-                self.fields['street_address'].initial = user_address.street_address
-                self.fields['city'].initial = user_address.city
-                self.fields['postal_code'].initial = user_address.postal_code
-                self.fields['country'].initial = user_address.country
-
     def save(self, commit=True):
         user = super().save(commit=False)
         if commit:
             user.save()
 
-            user_account, created = UserBankAccount.objects.get_or_create(user=user)
-            user_address, created = UserAddress.objects.get_or_create(user=user) 
+            account_type = self.cleaned_data['account_type']
+            gender = self.cleaned_data['gender']
+            birth_date = self.cleaned_data['birth_date']
+            religion = self.cleaned_data['religion']
+            street_address = self.cleaned_data['street_address']
+            city = self.cleaned_data['city']
+            postal_code = self.cleaned_data['postal_code']
+            country = self.cleaned_data['country']
 
-            user_account.account_type = self.cleaned_data['account_type']
-            user_account.gender = self.cleaned_data['gender']
-            user_account.birth_date = self.cleaned_data['birth_date']
-            user_account.save()
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT id FROM accounts_userbankaccount WHERE user_id = %s", [user.id])
+                account = cursor.fetchone()
+                if account:
+                    cursor.execute("""
+                        UPDATE accounts_userbankaccount 
+                        SET account_type = %s, gender = %s, birth_date = %s, religion = %s 
+                        WHERE user_id = %s
+                    """, [account_type, gender, birth_date, religion, user.id])
+                else:
+                    cursor.execute("""
+                        INSERT INTO accounts_userbankaccount 
+                        (user_id, account_type, gender, birth_date, religion, account_no, balance, initial_deposit_date)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, CURRENT_DATE)
+                    """, [user.id, account_type, gender, birth_date, religion, 100000 + user.id, 0])
 
-            user_address.street_address = self.cleaned_data['street_address']
-            user_address.city = self.cleaned_data['city']
-            user_address.postal_code = self.cleaned_data['postal_code']
-            user_address.country = self.cleaned_data['country']
-            user_address.save()
+                cursor.execute("SELECT id FROM accounts_useraddress WHERE user_id = %s", [user.id])
+                address = cursor.fetchone()
+                if address:
+                    cursor.execute("""
+                        UPDATE accounts_useraddress 
+                        SET street_address = %s, city = %s, postal_code = %s, country = %s 
+                        WHERE user_id = %s
+                    """, [street_address, city, postal_code, country, user.id])
+                else:
+                    cursor.execute("""
+                        INSERT INTO accounts_useraddress 
+                        (user_id, street_address, city, postal_code, country)
+                        VALUES (%s, %s, %s, %s, %s)
+                    """, [user.id, street_address, city, postal_code, country])
 
         return user

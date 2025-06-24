@@ -3,6 +3,51 @@
 
 {% block head_title %}Shariah Banking System{% endblock %}
 
+<!-- {% block background_image %}
+<style>
+    footer {
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+    }
+
+    .content-wrapper {
+        min-height: 100vh;
+        padding-bottom: 3rem; 
+        position: relative; 
+    }
+
+    /* Apply blur effect on the background image */
+    .content-wrapper::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url('{% static "img/ShariahBank.jpg" %}');
+        background-size: cover; /* Ensures the image covers the screen */
+        background-position: center top;
+        background-repeat: no-repeat;
+        z-index: -1;
+        object-fit: contain;
+    }
+
+
+    /* Optional: To darken the background for better readability */
+    .content-wrapper::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.4); /* Semi-transparent dark overlay */
+        z-index: -1; /* Place it behind the content */
+    }
+</style>
+{% endblock %} -->
+
 {% block content %}
 <style>
 @keyframes slide-in-left {
@@ -25,39 +70,39 @@
     <div class="flex flex-col w-full lg:w-1/2 justify-center items-start pt-16 pb-24 px-6 bg-gradient-to-b from-gray-900 to-gray-700 text-white rounded-2xl bg-opacity-70 mx-3 
     animate-slide-in-left">
         {% if x == 1 %}
-            <h1 class="font-bold text-2xl my-4 text-center">
+            <h1 class="text-2xl font-bold text-center mb-6">
                 “O believers! Fear Allah and give up outstanding interest if you are true believers.”
-                — Surah Al-Baqarah (2:278)  
+                <br><span class="text-yellow-400">— Surah Al-Baqarah (2:278)</span>
             </h1>
         {% elif x == 2 %}
-            <h1 class="font-bold text-2xl my-4 text-center">
-                “If you do not, then be informed of a war from Allah and His Messenger. But if you repent, you may retain your capital—neither inflicting nor suffering harm.”
-                — Surah Al-Baqarah (2:279)
+            <h1 class="text-2xl font-bold text-center mb-6">
+                “If you do not, then be informed of a war from Allah and His Messenger...”
+                <br><span class="text-yellow-400">— Surah Al-Baqarah (2:279)</span>
             </h1>
         {% elif x == 3 %}
-            <h1 class="font-bold text-2xl my-4 text-center">
-                “Allah destroys interest and gives increase for charities. And Allah does not like every sinning disbeliever.”
-                — Surah Al-Baqarah (2:276)
+            <h1 class="text-2xl font-bold text-center mb-6">
+                “Allah destroys interest and gives increase for charities...”
+                <br><span class="text-yellow-400">— Surah Al-Baqarah (2:276)</span>
             </h1>
         {% elif x == 4 %}
-            <h1 class="font-bold text-2xl my-4 text-center">
-                “Whatever you give for interest to increase within the wealth of people will not increase with Allah. But what you give in charity, desiring the face of Allah—those are the multipliers.”
-                — Surah Ar-Rum (30:39)
+            <h1 class="text-2xl font-bold text-center mb-6">
+                “Whatever you give for interest to increase within the wealth of people will not increase with Allah...”
+                <br><span class="text-yellow-400">— Surah Ar-Rum (30:39)</span>
             </h1>
         {% elif x == 5 %}
-            <h1 class="font-bold text-2xl my-4 text-center">
-                Jabir (RA) reported: “The Messenger of Allah (ﷺ) cursed the one who consumes interest, the one who pays it, the one who records it, and the two witnesses to it.”
-                — (Sahih Muslim 1598)
+            <h1 class="text-2xl font-bold text-center mb-6">
+                “The Messenger of Allah ﷺ cursed the one who consumes interest...”
+                <br><span class="text-yellow-400">— Sahih Muslim 1598</span>
             </h1>
         {% elif x == 6 %}
-            <h1 class="font-bold text-2xl my-4 text-center">
-                Abdullah ibn Hanzalah (RA) reported: “The Messenger of Allah (ﷺ) said, ‘A single dirham of interest knowingly taken by a person is worse than committing adultery 36 times.’”
-                — (Musnad Ahmad 21957, Al-Bayhaqi 10566, Sahih by Al-Albani)
+            <h1 class="text-2xl font-bold text-center mb-6">
+                “A single dirham of interest knowingly taken by a person is worse than committing adultery 36 times.”
+                <br><span class="text-yellow-400">— Musnad Ahmad 21957</span>
             </h1>
         {% elif x == 7 %}
-            <h1 class="font-bold text-2xl my-4 text-center">
-                Abdullah ibn Mas’ud (RA) reported: “The Messenger of Allah (ﷺ) said, ‘Riba has seventy-three levels, the least of which is like a man committing adultery with his own mother.’”
-                — (Sunan Ibn Majah 2274, Sahih by Al-Albani)
+            <h1 class="text-2xl font-bold text-center mb-6">
+                “Riba has seventy-three levels, the least of which is like a man committing adultery with his own mother.”
+                <br><span class="text-yellow-400">— Sunan Ibn Majah 2274</span>
             </h1>
         {% endif %}
 
