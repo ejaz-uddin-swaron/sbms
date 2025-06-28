@@ -229,7 +229,7 @@ class SendMoneyView(TransactionCreateMixin):
         messages.success(self.request, f'Successfully sent {"{:,.2f}".format(float(amount))}$ to recipient.')
         send_transaction_email(user, amount, 'Send Money Email', 'transactions/send_money_email.html')
 
-        from django.contrib.auth.models import User  # safe use of model to get recipient's email only
+        from django.contrib.auth.models import User  
         recipient_user = User.objects.get(id=recipient_user_id)
         send_transaction_email(recipient_user, amount, 'Money Received Email', 'transactions/receive_money_email.html')
 

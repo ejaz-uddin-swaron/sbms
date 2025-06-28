@@ -10,6 +10,5 @@ class homeView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs) 
         context['x'] = random.randint(1,7)
-        print(context['x'])
 
         return context

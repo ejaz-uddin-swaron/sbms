@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'transactions',
     'features',
     'django.contrib.humanize',
+    'widget_tweaks',
 ]
 
 MIDDLEWARE = [

@@ -16,7 +16,6 @@ class TransactionForm(forms.ModelForm):
     def save(self, commit=True):
         self.instance.account = self.account
 
-        # ✅ fetch latest balance manually
         with connection.cursor() as cursor:
             cursor.execute("SELECT balance FROM accounts_userbankaccount WHERE id = %s", [self.account.id])
             balance = cursor.fetchone()[0]
