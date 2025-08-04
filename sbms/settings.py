@@ -32,7 +32,7 @@ DEBUG = True
 ALLOWED_HOSTS = ["*"]
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://',
+    'https://sbms-q8iw.onrender.com',
 ]
 
 # Application definition
