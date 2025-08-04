@@ -36,7 +36,7 @@
                 </div>
 
                 <div class="space-y-2 text-sm">
-                    <p><span class="font-semibold">Monthly Deposit:</span> ৳{{ account.monthly_deposit }}</p>
+                    <p><span class="font-semibold">Monthly Deposit:</span> ${{ account.monthly_deposit }}</p>
                     <p><span class="font-semibold">Last Deposit:</span> {{ account.last_deposit_date|default:"N/A" }}</p>
                     <p><span class="font-semibold">Status:</span> {{ account.is_active|yesno:"Active,Inactive" }}</p>
                 </div>
