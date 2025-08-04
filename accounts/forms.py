@@ -2,7 +2,7 @@ from django.contrib.auth.forms import UserCreationForm
 from .constants import GENDER, ACCOUNT_TYPE, RELIGION
 from django import forms
 from django.contrib.auth.models import User
-from django.db import connection
+from accounts.models import UserBankAccount, UserAddress
 
 class UserRegistrationForm(UserCreationForm):
     birth_date = forms.DateField(widget=forms.DateInput(attrs={'type':'date'}))
@@ -23,26 +23,22 @@ class UserRegistrationForm(UserCreationForm):
 
         if commit:
             our_user.save()
-            account_type = self.cleaned_data.get('account_type')
-            gender = self.cleaned_data.get('gender')
-            postal_code = self.cleaned_data.get('postal_code')
-            country = self.cleaned_data.get('country')
-            birth_date = self.cleaned_data.get('birth_date')
-            city = self.cleaned_data.get('city')
-            street_address = self.cleaned_data.get('street_address')
-            religion = self.cleaned_data.get('religion')
-
-            with connection.cursor() as cursor:
-                cursor.execute("""
-                    INSERT INTO accounts_useraddress (user_id, street_address, city, postal_code, country)
-                    VALUES (%s, %s, %s, %s, %s)
-                """, [our_user.id, street_address, city, postal_code, country])
-
-                cursor.execute("""
-                    INSERT INTO accounts_userbankaccount 
-                    (user_id, account_type, account_no, birth_date, gender, balance, religion, initial_deposit_date)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, CURRENT_DATE)
-                """, [our_user.id, account_type, 100000 + our_user.id, birth_date, gender, 0, religion])
+            UserAddress.objects.create(
+                user=our_user,
+                street_address=self.cleaned_data.get('street_address'),
+                city=self.cleaned_data.get('city'),
+                postal_code=self.cleaned_data.get('postal_code'),
+                country=self.cleaned_data.get('country'),
+            )
+            UserBankAccount.objects.create(
+                user=our_user,
+                account_type=self.cleaned_data.get('account_type'),
+                account_no=100000 + our_user.id,
+                birth_date=self.cleaned_data.get('birth_date'),
+                gender=self.cleaned_data.get('gender'),
+                balance=0,
+                religion=self.cleaned_data.get('religion'),
+            )
 
         return our_user
 
@@ -91,44 +87,34 @@ class UserUpdateForm(forms.ModelForm):
         if commit:
             user.save()
 
-            account_type = self.cleaned_data['account_type']
-            gender = self.cleaned_data['gender']
-            birth_date = self.cleaned_data['birth_date']
-            religion = self.cleaned_data['religion']
-            street_address = self.cleaned_data['street_address']
-            city = self.cleaned_data['city']
-            postal_code = self.cleaned_data['postal_code']
-            country = self.cleaned_data['country']
+            account_data = {
+                'account_type': self.cleaned_data['account_type'],
+                'gender': self.cleaned_data['gender'],
+                'birth_date': self.cleaned_data['birth_date'],
+                'religion': self.cleaned_data['religion'],
+            }
 
-            with connection.cursor() as cursor:
-                cursor.execute("SELECT id FROM accounts_userbankaccount WHERE user_id = %s", [user.id])
-                account = cursor.fetchone()
-                if account:
-                    cursor.execute("""
-                        UPDATE accounts_userbankaccount 
-                        SET account_type = %s, gender = %s, birth_date = %s, religion = %s 
-                        WHERE user_id = %s
-                    """, [account_type, gender, birth_date, religion, user.id])
-                else:
-                    cursor.execute("""
-                        INSERT INTO accounts_userbankaccount 
-                        (user_id, account_type, gender, birth_date, religion, account_no, balance, initial_deposit_date)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, CURRENT_DATE)
-                    """, [user.id, account_type, gender, birth_date, religion, 100000 + user.id, 0])
+            account, created = UserBankAccount.objects.get_or_create(user=user, defaults={
+                **account_data,
+                'account_no': 100000 + user.id,
+                'balance': 0,
+            })
+            if not created:
+                for field, value in account_data.items():
+                    setattr(account, field, value)
+                account.save()
 
-                cursor.execute("SELECT id FROM accounts_useraddress WHERE user_id = %s", [user.id])
-                address = cursor.fetchone()
-                if address:
-                    cursor.execute("""
-                        UPDATE accounts_useraddress 
-                        SET street_address = %s, city = %s, postal_code = %s, country = %s 
-                        WHERE user_id = %s
-                    """, [street_address, city, postal_code, country, user.id])
-                else:
-                    cursor.execute("""
-                        INSERT INTO accounts_useraddress 
-                        (user_id, street_address, city, postal_code, country)
-                        VALUES (%s, %s, %s, %s, %s)
-                    """, [user.id, street_address, city, postal_code, country])
+            address_data = {
+                'street_address': self.cleaned_data['street_address'],
+                'city': self.cleaned_data['city'],
+                'postal_code': self.cleaned_data['postal_code'],
+                'country': self.cleaned_data['country'],
+            }
+
+            address, created = UserAddress.objects.get_or_create(user=user, defaults=address_data)
+            if not created:
+                for field, value in address_data.items():
+                    setattr(address, field, value)
+                address.save()
 
         return user

@@ -5,8 +5,8 @@ from django.contrib.auth import login, logout
 from django.views import View
 from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import reverse_lazy
-from django.db import connection
 from django.contrib.auth.models import User
+from .models import UserBankAccount, UserAddress 
 
 class UserRegistrationView(FormView):
     template_name = 'accounts/user_registration.html'
@@ -20,6 +20,7 @@ class UserRegistrationView(FormView):
 
 class UserLoginView(LoginView):
     template_name = 'accounts/user_login.html'
+
     def get_success_url(self):
         return reverse_lazy('home')
 
@@ -32,22 +33,35 @@ class UserLogoutView(LogoutView):
 class UserBankAccountUpdateView(View):
     template_name = 'accounts/profile.html'
 
-    def get_initial_data(self, user_id):
+    def get_initial_data(self, user):
         data = {}
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT account_type, gender, birth_date, religion FROM accounts_userbankaccount WHERE user_id = %s", [user_id])
-            account = cursor.fetchone()
-            if account:
-                data['account_type'], data['gender'], data['birth_date'], data['religion'] = account
 
-            cursor.execute("SELECT street_address, city, postal_code, country FROM accounts_useraddress WHERE user_id = %s", [user_id])
-            address = cursor.fetchone()
-            if address:
-                data['street_address'], data['city'], data['postal_code'], data['country'] = address
+        try:
+            account = UserBankAccount.objects.get(user=user)
+            data.update({
+                'account_type': account.account_type,
+                'gender': account.gender,
+                'birth_date': account.birth_date,
+                'religion': account.religion
+            })
+        except UserBankAccount.DoesNotExist:
+            pass
+
+        try:
+            address = UserAddress.objects.get(user=user)
+            data.update({
+                'street_address': address.street_address,
+                'city': address.city,
+                'postal_code': address.postal_code,
+                'country': address.country
+            })
+        except UserAddress.DoesNotExist:
+            pass
+
         return data
 
     def get(self, request):
-        initial = self.get_initial_data(request.user.id)
+        initial = self.get_initial_data(request.user)
         form = UserUpdateForm(instance=request.user, initial=initial)
         return render(request, self.template_name, {'form': form})
 

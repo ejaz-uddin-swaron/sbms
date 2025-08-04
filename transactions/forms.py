@@ -1,6 +1,6 @@
 from django import forms
 from .models import Transaction
-from django.db import connection
+from accounts.models import UserBankAccount
 
 class TransactionForm(forms.ModelForm):
     class Meta:
@@ -15,13 +15,7 @@ class TransactionForm(forms.ModelForm):
 
     def save(self, commit=True):
         self.instance.account = self.account
-
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT balance FROM accounts_userbankaccount WHERE id = %s", [self.account.id])
-            balance = cursor.fetchone()[0]
-
-        self.instance.balance_after_transaction = balance
-
+        self.instance.balance_after_transaction = self.account.balance
         return super().save(commit=commit)
 
 class DepositForm(TransactionForm):
@@ -84,11 +78,8 @@ class SendMoneyForm(TransactionForm):
         return amount
 
     def clean_recipient_account_number(self):
-        from django.db import connection
         recipient_account_number = self.cleaned_data.get('recipient_account_number')
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT COUNT(*) FROM accounts_userbankaccount WHERE account_no = %s", [recipient_account_number])
-            exists = cursor.fetchone()[0]
+        exists = UserBankAccount.objects.filter(account_no=recipient_account_number).exists()
 
         if not exists:
             raise forms.ValidationError("Recipient account number is invalid.")
@@ -96,14 +87,7 @@ class SendMoneyForm(TransactionForm):
 
     def save(self, commit=True):
         transaction = super().save(commit=False)
-
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT balance FROM accounts_userbankaccount WHERE id = %s", [self.account.id])
-            balance = cursor.fetchone()[0]
-
-        transaction.balance_after_transaction = balance
-
+        transaction.balance_after_transaction = self.account.balance
         if commit:
             transaction.save()
-
         return transaction

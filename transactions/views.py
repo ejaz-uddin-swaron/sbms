@@ -11,7 +11,7 @@ from django.urls import reverse_lazy
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from decimal import Decimal
-from django.db import connection
+from accounts.models import UserBankAccount
 from .models import Transaction
 
 def send_transaction_email(user, amount, subject, template):
@@ -19,7 +19,6 @@ def send_transaction_email(user, amount, subject, template):
         'user': user,
         'amount': amount
     })
-
     send_email = EmailMultiAlternatives(subject, '', to=[user.email])
     send_email.attach_alternative(message, 'text/html')
     send_email.send()
@@ -30,7 +29,6 @@ def send_zakat_email(user, amount, zakat_amount, subject, template):
         'amount': amount,
         'zakat_amount': zakat_amount
     })
-
     send_email = EmailMultiAlternatives(subject, '', to=[user.email])
     send_email.attach_alternative(message, 'text/html')
     send_email.send()
@@ -62,10 +60,12 @@ class DepositMoneyView(TransactionCreateMixin):
         amount = form.cleaned_data['amount']
         user = self.request.user
 
-        with connection.cursor() as cursor:
-            cursor.execute("UPDATE accounts_userbankaccount SET balance = balance + %s WHERE user_id = %s", [amount, user.id])
-            cursor.execute("SELECT religion, balance FROM accounts_userbankaccount WHERE user_id = %s", [user.id])
-            religion, balance = cursor.fetchone()
+        account = user.account
+        account.balance += amount
+        account.save()
+
+        religion = account.religion
+        balance = account.balance
 
         form.instance.balance_after_transaction = balance
         messages.success(self.request, f'{"{:,.2f}".format(float(amount))}$ has been deposited to your account successfully')
@@ -88,12 +88,11 @@ class WithdrawalMoneyView(TransactionCreateMixin):
         amount = form.cleaned_data['amount']
         user = self.request.user
 
-        with connection.cursor() as cursor:
-            cursor.execute("UPDATE accounts_userbankaccount SET balance = balance - %s WHERE user_id = %s", [amount, user.id])
-            cursor.execute("SELECT balance FROM accounts_userbankaccount WHERE user_id = %s", [user.id])
-            balance = cursor.fetchone()[0]
+        account = user.account
+        account.balance -= amount
+        account.save()
 
-        form.instance.balance_after_transaction = balance
+        form.instance.balance_after_transaction = account.balance
         messages.success(self.request, f'{"{:,.2f}".format(float(amount))}$ has been withdrawn from your account')
         send_transaction_email(user, amount, 'Withdrawal Email', 'transactions/withdrawal_email.html')
 
@@ -108,13 +107,11 @@ class LoanRequestMoneyView(TransactionCreateMixin):
 
     def form_valid(self, form):
         user = self.request.user
-        with connection.cursor() as cursor:
-            cursor.execute("""
-                SELECT COUNT(*) FROM transactions_transaction 
-                WHERE account_id = (SELECT id FROM accounts_userbankaccount WHERE user_id = %s) 
-                AND transaction_type = 3 AND loan_approved = TRUE
-            """, [user.id])
-            loan_count = cursor.fetchone()[0]
+        loan_count = Transaction.objects.filter(
+            account=user.account,
+            transaction_type=3,
+            loan_approved=True
+        ).count()
 
         if loan_count > 3:
             return HttpResponse('You have crossed your loan request limit')
@@ -150,33 +147,27 @@ class TransactionReportView(LoginRequiredMixin, ListView):
 
 class PayLoanView(LoginRequiredMixin, View):
     def get(self, request, loan_id):
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT id, amount, account_id, loan_approved FROM transactions_transaction WHERE id = %s", [loan_id])
-            loan = cursor.fetchone()
-            if not loan:
-                messages.error(request, "Loan not found.")
-                return redirect('loan_list')
+        try:
+            loan = Transaction.objects.get(id=loan_id)
+        except Transaction.DoesNotExist:
+            messages.error(request, "Loan not found.")
+            return redirect('loan_list')
 
-            loan_id, amount, account_id, approved = loan
-            if not approved:
-                messages.error(request, "Loan not approved yet.")
-                return redirect('loan_list')
+        if not loan.loan_approved:
+            messages.error(request, "Loan not approved yet.")
+            return redirect('loan_list')
 
-            cursor.execute("SELECT balance FROM accounts_userbankaccount WHERE id = %s", [account_id])
-            balance = cursor.fetchone()[0]
+        account = loan.account
+        if loan.amount > account.balance:
+            messages.error(request, f'Loan amount exceeds available balance')
+            return redirect('loan_list')
 
-            if amount > balance:
-                messages.error(request, f'Loan amount exceeds available balance')
-                return redirect('loan_list')
+        account.balance -= loan.amount
+        account.save()
 
-            new_balance = balance - amount
-
-            cursor.execute("UPDATE accounts_userbankaccount SET balance = %s WHERE id = %s", [new_balance, account_id])
-            cursor.execute("""
-                UPDATE transactions_transaction 
-                SET transaction_type = %s, balance_after_transaction = %s 
-                WHERE id = %s
-            """, [LOAN_PAID, new_balance, loan_id])
+        loan.transaction_type = LOAN_PAID
+        loan.balance_after_transaction = account.balance
+        loan.save()
 
         return redirect('loan_list')
 
@@ -185,10 +176,10 @@ class LoanListView(LoginRequiredMixin, ListView):
     context_object_name = 'loans'
 
     def get_queryset(self):
-        return Transaction.objects.raw("""
-            SELECT * FROM transactions_transaction 
-            WHERE account_id = %s AND transaction_type = %s
-        """, [self.request.user.account.id, LOAN])
+        return Transaction.objects.filter(
+            account=self.request.user.account,
+            transaction_type=LOAN
+        )
 
 class SendMoneyView(TransactionCreateMixin):
     form_class = SendMoneyForm
@@ -204,33 +195,29 @@ class SendMoneyView(TransactionCreateMixin):
         recipient_account_number = form.cleaned_data['recipient_account_number']
         user = self.request.user
 
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT id, user_id, balance FROM accounts_userbankaccount WHERE account_no = %s", [recipient_account_number])
-            recipient = cursor.fetchone()
-            if not recipient:
-                messages.error(self.request, "Recipient not found.")
-                return redirect('transaction_report')
+        try:
+            recipient_account = UserBankAccount.objects.get(account_no=recipient_account_number)
+        except UserBankAccount.DoesNotExist:
+            messages.error(self.request, "Recipient not found.")
+            return redirect('transaction_report')
 
-            recipient_id, recipient_user_id, recipient_balance = recipient
+        sender_account = user.account
 
-            cursor.execute("SELECT id, balance FROM accounts_userbankaccount WHERE user_id = %s", [user.id])
-            sender_id, sender_balance = cursor.fetchone()
+        sender_account.balance -= amount
+        recipient_account.balance += amount
 
-            new_sender_balance = sender_balance - amount
-            new_recipient_balance = recipient_balance + amount
+        sender_account.save()
+        recipient_account.save()
 
-            cursor.execute("UPDATE accounts_userbankaccount SET balance = %s WHERE id = %s", [new_sender_balance, sender_id])
-            cursor.execute("UPDATE accounts_userbankaccount SET balance = %s WHERE id = %s", [new_recipient_balance, recipient_id])
-
-        form.instance.balance_after_transaction = new_sender_balance
+        form.instance.balance_after_transaction = sender_account.balance
         transaction = form.save(commit=False)
         transaction.save()
 
         messages.success(self.request, f'Successfully sent {"{:,.2f}".format(float(amount))}$ to recipient.')
         send_transaction_email(user, amount, 'Send Money Email', 'transactions/send_money_email.html')
 
-        from django.contrib.auth.models import User  
-        recipient_user = User.objects.get(id=recipient_user_id)
+        from django.contrib.auth.models import User
+        recipient_user = User.objects.get(id=recipient_account.user.id)
         send_transaction_email(recipient_user, amount, 'Money Received Email', 'transactions/receive_money_email.html')
 
         return super().form_valid(form)
