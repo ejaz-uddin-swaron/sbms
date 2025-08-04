@@ -26,6 +26,7 @@ django-environ
 django-extensions
 django-filter
 django-humanize
+django-widget-tweaks
 djangorestframework
 djangorestframework_simplejwt
 drf-yasg
